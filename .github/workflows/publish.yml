@@ -31,7 +31,7 @@ jobs:
                                         http://maven.apache.org/xsd/settings-1.0.0.xsd">
             <servers>
               <server>
-                <id>openmrs-repo-modules</id>
+                <id>O3-amrs</id>
                 <username>\${env.GITHUB_ACTOR}</username>
                 <password>\${env.GITHUB_TOKEN}</password>
               </server>
