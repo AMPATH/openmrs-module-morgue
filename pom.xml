@@ -160,5 +160,16 @@
 		</plugins>
 	</build>
 
-	
+	<distributionManagement>
+        <repository>
+            <id>O3-amrs</id>
+            <name>AMRS GitHub</name>
+            <url>https://maven.pkg.github.com/AMPATH/openmrs-content-amrs</url>
+        </repository>
+        <snapshotRepository>
+            <id>O3-amrs</id>
+            <name>AMRS GitHub</name>
+            <url>https://maven.pkg.github.com/AMPATH/openmrs-content-amrs</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
