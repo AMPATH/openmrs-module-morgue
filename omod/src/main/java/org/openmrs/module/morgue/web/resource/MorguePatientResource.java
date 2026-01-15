@@ -91,6 +91,7 @@ public class MorguePatientResource extends DelegatingCrudResource<CombinedPatien
 		String createdOnOrBeforeDateStr = context.getRequest().getParameter("createdOnOrBefore");
 		String createdOnOrAfterDateStr = context.getRequest().getParameter("createdOnOrAfter");
 		String dead = context.getRequest().getParameter("dead");
+		String locationUuid = context.getRequest().getParameter("locationUuid");
 		
 		Date createdOnOrBeforeDate = StringUtils.isNotBlank(createdOnOrBeforeDateStr) ? (Date) ConversionUtil.convert(
 		    createdOnOrBeforeDateStr, Date.class) : null;
@@ -98,7 +99,7 @@ public class MorguePatientResource extends DelegatingCrudResource<CombinedPatien
 		    createdOnOrAfterDateStr, Date.class) : null;
 		
 		MorgueService service = Context.getService(MorgueService.class);
-		List<Object[]> result = service.getPatients(dead, name, uuid, createdOnOrAfterDate, createdOnOrBeforeDate);
+		List<Object[]> result = service.getPatients(dead, name, uuid, createdOnOrAfterDate, createdOnOrBeforeDate, locationUuid);
 		
 		// Apply pagination
 		int start = context.getStartIndex();
