@@ -169,6 +169,10 @@ public class MorgueDao {
 			query.setParameter("createdBefore", createdOnOrBeforeDate);
 		}
 
+		if (locationUuid != null) {
+			query.setParameter("locationUuid", locationUuid);
+		}
+
 		List<Object[]> rawResults = query.list();
 		List<Object[]> mappedResults = new ArrayList<>();
 
