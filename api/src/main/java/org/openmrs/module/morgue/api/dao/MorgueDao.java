@@ -141,7 +141,7 @@ public class MorgueDao {
 			sql.append("AND EXISTS (SELECT 1 FROM encounter e JOIN encounter_type et ON et.encounter_type_id = e.encounter_type ");
         	sql.append("LEFT JOIN location l ON l.location_id = e.location_id ");
         	sql.append("LEFT JOIN obs o ON o.encounter_id = e.encounter_id ");
-        	sql.append("WHERE e.patient_id = p.patient_id AND et.encounter_type_id IN (319, 167) AND o.concept_id = 9082 AND o.value_coded = 159 ");
+        	sql.append("WHERE e.patient_id = p.patient_id AND et.encounter_type_id IN (319, 167) AND o.concept_id = 7087 AND o.value_coded = 159 ");
 			sql.append("AND l.uuid = :locationUuid) ");
 		}
 
