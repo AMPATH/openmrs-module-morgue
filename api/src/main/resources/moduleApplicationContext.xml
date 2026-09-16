@@ -25,6 +25,19 @@
 
     <context:component-scan base-package="org.openmrs.module.morgue" />
 
+    <!-- New DAOs for storage unit / compartment / assignment -->
+    <bean id="morgueStorageUnitDao" class="org.openmrs.module.morgue.api.dao.hibernate.HibernateMorgueStorageUnitDao">
+        <property name="sessionFactory"><ref bean="sessionFactory" /></property>
+    </bean>
+
+    <bean id="morgueCompartmentDao" class="org.openmrs.module.morgue.api.dao.hibernate.HibernateMorgueCompartmentDao">
+        <property name="sessionFactory"><ref bean="sessionFactory" /></property>
+    </bean>
+
+    <bean id="morgueStorageAssignmentDao" class="org.openmrs.module.morgue.api.dao.hibernate.HibernateMorgueStorageAssignmentDao">
+        <property name="sessionFactory"><ref bean="sessionFactory" /></property>
+    </bean>
+
     <!-- Wraps MorgueService methods in DB transactions and OpenMRS interceptors,
     which set audit info like dateCreated, changedBy, etc.-->
     <bean id="morgue.MorgueService"
@@ -41,6 +54,9 @@
                         </property>
                     </bean>
                 </property>
+                <property name="storageUnitDao"><ref bean="morgueStorageUnitDao" /></property>
+                <property name="compartmentDao"><ref bean="morgueCompartmentDao" /></property>
+                <property name="storageAssignmentDao"><ref bean="morgueStorageAssignmentDao" /></property>
             </bean>
         </property>
         <property name="preInterceptors">

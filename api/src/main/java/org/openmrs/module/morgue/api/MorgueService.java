@@ -12,10 +12,15 @@ package org.openmrs.module.morgue.api;
 import org.openmrs.annotation.Authorized;
 import org.openmrs.api.APIException;
 import org.openmrs.api.OpenmrsService;
+import org.openmrs.module.morgue.MorgueCompartment;
 import org.openmrs.module.morgue.MorgueConfig;
+import org.openmrs.module.morgue.MorgueStorageAssignment;
+import org.openmrs.module.morgue.MorgueStorageUnit;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 import java.util.List;
+
+import org.openmrs.Location;
 import org.openmrs.Patient;
 
 /**
@@ -24,5 +29,38 @@ import org.openmrs.Patient;
  */
 public interface MorgueService extends OpenmrsService {
 	
-	List<Object[]> getPatients(String dead, String name, String uuid, Date createdOnOrAfterDate, Date createdOnOrBeforeDate, String locationUuid);
+	List<Object[]> getPatients(String dead, String name, String uuid, Date createdOnOrAfterDate, Date createdOnOrBeforeDate,
+	        String locationUuid);
+	
+	// Storage Unit
+	MorgueStorageUnit getStorageUnitByUuid(String uuid);
+	
+	List<MorgueStorageUnit> getAllStorageUnits(Boolean includeVoided, Location location);
+	
+	MorgueStorageUnit saveStorageUnit(MorgueStorageUnit storageUnit);
+	
+	void deleteStorageUnit(MorgueStorageUnit storageUnit);
+	
+	// Compartment
+	MorgueCompartment getCompartmentByUuid(String uuid);
+	
+	List<MorgueCompartment> getCompartmentsByStorageUnit(MorgueStorageUnit storageUnit);
+	
+	MorgueCompartment saveCompartment(MorgueCompartment compartment);
+	
+	void deleteCompartment(MorgueCompartment compartment);
+	
+	// Storage Assignment
+	MorgueStorageAssignment getActiveAssignmentForPatient(Patient patient);
+	
+	List<MorgueStorageAssignment> getAssignmentsForPatient(Patient patient);
+	
+	List<MorgueStorageAssignment> getAssignmentsForLocation(Location location, Boolean includeVoided, Date createdOnOrAfter,
+	        Date admittedOnOrAfter, Date admittedOnOrBefore);
+	
+	MorgueStorageAssignment assignPatientToCompartment(Patient patient, MorgueCompartment compartment);
+	
+	MorgueStorageAssignment dischargeAssignment(MorgueStorageAssignment assignment);
+	
+	void deleteAssignment(MorgueStorageAssignment assignment);
 }

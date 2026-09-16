@@ -19,6 +19,9 @@
 
 	<mappingFiles>
 		MorgueDeceased.hbm.xml
+		MorgueStorageUnit.hbm.xml
+		MorgueCompartment.hbm.xml
+		MorgueStorageAssignment.hbm.xml
 	</mappingFiles>
 	
 	<require_version>${openmrsPlatformVersion}</require_version>

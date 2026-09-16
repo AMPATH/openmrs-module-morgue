@@ -14,9 +14,17 @@ import org.openmrs.api.UserService;
 import org.openmrs.api.impl.BaseOpenmrsService;
 import java.util.Date;
 import java.util.List;
+
+import org.openmrs.Location;
 import org.openmrs.Patient;
+import org.openmrs.module.morgue.MorgueCompartment;
+import org.openmrs.module.morgue.MorgueStorageAssignment;
+import org.openmrs.module.morgue.MorgueStorageUnit;
 import org.openmrs.module.morgue.api.MorgueService;
+import org.openmrs.module.morgue.api.dao.MorgueCompartmentDao;
 import org.openmrs.module.morgue.api.dao.MorgueDao;
+import org.openmrs.module.morgue.api.dao.MorgueStorageAssignmentDao;
+import org.openmrs.module.morgue.api.dao.MorgueStorageUnitDao;
 
 public class MorgueServiceImpl extends BaseOpenmrsService implements MorgueService {
 	
@@ -24,11 +32,29 @@ public class MorgueServiceImpl extends BaseOpenmrsService implements MorgueServi
 	
 	UserService userService;
 	
+	private MorgueStorageUnitDao storageUnitDao;
+	
+	private MorgueCompartmentDao compartmentDao;
+	
+	private MorgueStorageAssignmentDao storageAssignmentDao;
+	
 	/**
 	 * Injected in moduleApplicationContext.xml
 	 */
 	public void setDao(MorgueDao dao) {
 		this.dao = dao;
+	}
+	
+	public void setStorageUnitDao(MorgueStorageUnitDao storageUnitDao) {
+		this.storageUnitDao = storageUnitDao;
+	}
+	
+	public void setCompartmentDao(MorgueCompartmentDao compartmentDao) {
+		this.compartmentDao = compartmentDao;
+	}
+	
+	public void setStorageAssignmentDao(MorgueStorageAssignmentDao storageAssignmentDao) {
+		this.storageAssignmentDao = storageAssignmentDao;
 	}
 	
 	/**
@@ -44,4 +70,117 @@ public class MorgueServiceImpl extends BaseOpenmrsService implements MorgueServi
 		return dao.getPatients(dead, name, uuid, createdOnOrAfterDate, createdOnOrBeforeDate, locationUuid);
 	}
 	
+	// ----- Storage Unit -----
+	
+	@Override
+	public MorgueStorageUnit getStorageUnitByUuid(String uuid) {
+		return storageUnitDao.getStorageUnitByUuid(uuid);
+	}
+	
+	@Override
+	public List<MorgueStorageUnit> getAllStorageUnits(Boolean includeVoided, Location location) {
+		return storageUnitDao.getAllStorageUnits(includeVoided, location);
+	}
+	
+	@Override
+	public MorgueStorageUnit saveStorageUnit(MorgueStorageUnit storageUnit) {
+		return storageUnitDao.saveStorageUnit(storageUnit);
+	}
+	
+	@Override
+	public void deleteStorageUnit(MorgueStorageUnit storageUnit) {
+		storageUnitDao.deleteStorageUnit(storageUnit);
+	}
+	
+	// ----- Compartment -----
+	
+	@Override
+	public MorgueCompartment getCompartmentByUuid(String uuid) {
+		return compartmentDao.getCompartmentByUuid(uuid);
+	}
+	
+	@Override
+	public List<MorgueCompartment> getCompartmentsByStorageUnit(MorgueStorageUnit storageUnit) {
+		return compartmentDao.getCompartmentsByStorageUnit(storageUnit);
+	}
+	
+	@Override
+	public MorgueCompartment saveCompartment(MorgueCompartment compartment) {
+		return compartmentDao.saveCompartment(compartment);
+	}
+	
+	@Override
+	public void deleteCompartment(MorgueCompartment compartment) {
+		compartmentDao.deleteCompartment(compartment);
+	}
+	
+	// ----- Storage Assignment -----
+	
+	@Override
+	public MorgueStorageAssignment getActiveAssignmentForPatient(Patient patient) {
+		return storageAssignmentDao.getActiveAssignmentForPatient(patient);
+	}
+	
+	@Override
+	public List<MorgueStorageAssignment> getAssignmentsForPatient(Patient patient) {
+		return storageAssignmentDao.getAssignmentsForPatient(patient);
+	}
+	
+	@Override
+	public List<MorgueStorageAssignment> getAssignmentsForLocation(Location location, Boolean includeVoided,
+	        Date createdOnOrAfter, Date admittedOnOrAfter, Date admittedOnOrBefore) {
+		return storageAssignmentDao.getAssignmentsForLocation(location, includeVoided, createdOnOrAfter, admittedOnOrAfter,
+		    admittedOnOrBefore);
+	}
+	
+	@Override
+	public MorgueStorageAssignment assignPatientToCompartment(Patient patient, MorgueCompartment compartment) {
+
+		if (patient == null || compartment == null) {
+			throw new APIException("Patient and compartment are required");
+		}
+
+		// Business rule: a patient can't have two active assignments at once
+		MorgueStorageAssignment existing = storageAssignmentDao.getActiveAssignmentForPatient(patient);
+		if (existing != null) {
+			throw new APIException("Patient already has an active morgue storage assignment");
+		}
+
+		List<MorgueStorageAssignment> compartmentAssignments = storageAssignmentDao
+				.getAssignmentsForCompartment(compartment);
+		boolean compartmentOccupied = compartmentAssignments.stream()
+				.anyMatch(a -> a.getDateDischarged() == null);
+		if (compartmentOccupied) {
+			throw new APIException("Compartment is already occupied");
+		}
+
+		MorgueStorageAssignment assignment = new MorgueStorageAssignment();
+		assignment.setPatient(patient);
+		assignment.setCompartment(compartment);
+		assignment.setDateAdmitted(new Date());
+		assignment.setStatus("OCCUPIED");
+
+		return storageAssignmentDao.saveAssignment(assignment);
+	}
+	
+	@Override
+	public MorgueStorageAssignment dischargeAssignment(MorgueStorageAssignment assignment) {
+		
+		if (assignment == null) {
+			throw new APIException("Assignment is required");
+		}
+		if (assignment.getDateDischarged() != null) {
+			throw new APIException("Assignment has already been discharged");
+		}
+		
+		assignment.setDateDischarged(new Date());
+		assignment.setStatus("DISCHARGED");
+		
+		return storageAssignmentDao.saveAssignment(assignment);
+	}
+	
+	@Override
+	public void deleteAssignment(MorgueStorageAssignment assignment) {
+		storageAssignmentDao.deleteAssignment(assignment);
+	}
 }
