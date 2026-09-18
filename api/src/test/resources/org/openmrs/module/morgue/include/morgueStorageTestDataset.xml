@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    This Source Code Form is subject to the terms of the Mozilla Public License,
+    v. 2.0. If a copy of the MPL was not distributed with this file, You can
+    obtain one at http://mozilla.org/MPL/2.0/. OpenMRS is also distributed under
+    the terms of the Healthcare Disclaimer located at http://openmrs.org/license.
+
+    Copyright (C) OpenMRS Inc. OpenMRS is a registered trademark and the OpenMRS
+    graphic logo is a trademark of OpenMRS Inc.
+
+-->
+<!--
+    Rows for the three morgue storage tables. Locations 1 and 2, patients 2, 6 and 7 and user 1 all
+    come from the platform's standardTestDataset / initialInMemoryTestDataSet.
+
+    Every row lists every column, because a DBUnit flat XML dataset takes the column list of a table
+    from its first row.
+-->
+<dataset>
+
+    <!-- Two live storage units, one at each location, plus a voided one. -->
+    <morgue_storage_unit storage_unit_id="1" uuid="6e9b0a5e-0d42-4a6f-8d0f-1f1d2a3b4c51" display="Fridge A"
+                         location_id="1" creator="1" date_created="2026-09-16 09:00:00.0" changed_by="[NULL]"
+                         date_changed="[NULL]" voided="false" voided_by="[NULL]" date_voided="[NULL]"
+                         voided_reason="[NULL]"/>
+    <morgue_storage_unit storage_unit_id="2" uuid="6e9b0a5e-0d42-4a6f-8d0f-1f1d2a3b4c52" display="Fridge B"
+                         location_id="2" creator="1" date_created="2026-09-16 09:05:00.0" changed_by="[NULL]"
+                         date_changed="[NULL]" voided="false" voided_by="[NULL]" date_voided="[NULL]"
+                         voided_reason="[NULL]"/>
+    <morgue_storage_unit storage_unit_id="3" uuid="6e9b0a5e-0d42-4a6f-8d0f-1f1d2a3b4c53" display="Fridge C"
+                         location_id="1" creator="1" date_created="2026-09-16 09:10:00.0" changed_by="1"
+                         date_changed="2026-09-17 09:10:00.0" voided="true" voided_by="1"
+                         date_voided="2026-09-17 09:10:00.0" voided_reason="Decommissioned"/>
+
+    <!-- Fridge A has two live compartments and one voided one; Fridge B has one. -->
+    <morgue_compartment compartment_id="1" uuid="c0ffee00-0d42-4a6f-8d0f-1f1d2a3b4c61" display="A-1"
+                        storage_unit_id="1" creator="1" date_created="2026-09-16 09:20:00.0" changed_by="[NULL]"
+                        date_changed="[NULL]" voided="false" voided_by="[NULL]" date_voided="[NULL]"
+                        voided_reason="[NULL]"/>
+    <morgue_compartment compartment_id="2" uuid="c0ffee00-0d42-4a6f-8d0f-1f1d2a3b4c62" display="A-2"
+                        storage_unit_id="1" creator="1" date_created="2026-09-16 09:21:00.0" changed_by="[NULL]"
+                        date_changed="[NULL]" voided="false" voided_by="[NULL]" date_voided="[NULL]"
+                        voided_reason="[NULL]"/>
+    <morgue_compartment compartment_id="3" uuid="c0ffee00-0d42-4a6f-8d0f-1f1d2a3b4c63" display="A-3"
+                        storage_unit_id="1" creator="1" date_created="2026-09-16 09:22:00.0" changed_by="1"
+                        date_changed="2026-09-17 09:22:00.0" voided="true" voided_by="1"
+                        date_voided="2026-09-17 09:22:00.0" voided_reason="Door broken"/>
+    <morgue_compartment compartment_id="4" uuid="c0ffee00-0d42-4a6f-8d0f-1f1d2a3b4c64" display="B-1"
+                        storage_unit_id="2" creator="1" date_created="2026-09-16 09:23:00.0" changed_by="[NULL]"
+                        date_changed="[NULL]" voided="false" voided_by="[NULL]" date_voided="[NULL]"
+                        voided_reason="[NULL]"/>
+
+    <!--
+        Patient 2 is currently in A-1, patient 6 has been discharged from A-2, and patient 7's
+        assignment to B-1 has been voided.
+    -->
+    <morgue_storage_assignment storage_assignment_id="1" compartment_id="1" patient_id="2"
+                               date_admitted="2026-09-16 10:00:00.0" date_discharged="[NULL]" status="OCCUPIED"
+                               creator="1" date_created="2026-09-16 10:00:00.0" changed_by="[NULL]"
+                               date_changed="[NULL]" voided="false" voided_by="[NULL]" date_voided="[NULL]"
+                               voided_reason="[NULL]"/>
+    <morgue_storage_assignment storage_assignment_id="2" compartment_id="2" patient_id="6"
+                               date_admitted="2026-09-10 10:00:00.0" date_discharged="2026-09-14 16:30:00.0"
+                               status="DISCHARGED" creator="1" date_created="2026-09-10 10:00:00.0" changed_by="1"
+                               date_changed="2026-09-14 16:30:00.0" voided="false" voided_by="[NULL]"
+                               date_voided="[NULL]" voided_reason="[NULL]"/>
+    <morgue_storage_assignment storage_assignment_id="3" compartment_id="4" patient_id="7"
+                               date_admitted="2026-09-15 08:00:00.0" date_discharged="[NULL]" status="OCCUPIED"
+                               creator="1" date_created="2026-09-15 08:00:00.0" changed_by="1"
+                               date_changed="2026-09-15 09:00:00.0" voided="true" voided_by="1"
+                               date_voided="2026-09-15 09:00:00.0" voided_reason="Data entry error"/>
+
+</dataset>

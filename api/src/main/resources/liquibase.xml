@@ -112,5 +112,171 @@
             <column name="retired" value="0" />
         </insert>
     </changeSet>
+
+    <!-- Create morgue storage unit table -->
+    <changeSet id="morgue-new-table-morgue_storage_unit-2026-09-16-11-25-38" author="walteronoh">
+		<preConditions onFail="MARK_RAN">
+			<not><tableExists tableName="morgue_storage_unit"/></not>
+		</preConditions>
+		<comment>
+			Creating the morgue_storage_unit table
+		</comment>
+        <createTable tableName="morgue_storage_unit">
+            <column name="storage_unit_id" autoIncrement="true" type="int">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="uuid" type="char(38)">
+                <constraints nullable="false" unique="true" />
+            </column>
+            <column name="display" type="varchar(255)"/>
+            <column name="location_id" type="int">
+                <constraints nullable="false" foreignKeyName="fk_morgue_storage_unit_location" references="location(location_id)" />
+            </column>
+
+            <column name="creator" type="int"/>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="int"/>
+            <column name="date_changed" type="datetime"/>
+            <column defaultValueBoolean="false" name="voided" type="boolean">
+                <constraints nullable="true"/>
+            </column>
+            <column name="voided_by" type="int"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="voided_reason" type="varchar(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="morgue-new-index-storage_unit-location-2026-09-16-11-30-00" author="walteronoh">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_morgue_storage_unit_location" tableName="morgue_storage_unit"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="morgue_storage_unit" indexName="idx_morgue_storage_unit_location">
+            <column name="location_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Create morgue compartment table -->
+    <changeSet id="morgue-new-table-morgue_compartment-2026-09-16-11-51-57" author="walteronoh">
+		<preConditions onFail="MARK_RAN">
+			<not><tableExists tableName="morgue_compartment"/></not>
+		</preConditions>
+		<comment>
+			Creating the morgue_compartment table
+		</comment>
+        <createTable tableName="morgue_compartment">
+            <column name="compartment_id" autoIncrement="true" type="int">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="uuid" type="char(38)">
+                <constraints nullable="false" unique="true" />
+            </column>
+            <column name="display" type="varchar(255)"/>
+            <column name="storage_unit_id" type="int">
+                <constraints nullable="false" foreignKeyName="fk_morgue_compartment_morgue_storage_unit" references="morgue_storage_unit(storage_unit_id)" />
+            </column>
+
+            <column name="creator" type="int"/>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="int"/>
+            <column name="date_changed" type="datetime"/>
+            <column defaultValueBoolean="false" name="voided" type="boolean">
+                <constraints nullable="true"/>
+            </column>
+            <column name="voided_by" type="int"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="voided_reason" type="varchar(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="morgue-new-index-compartment-storage_unit-2026-09-16-11-58-40" author="walteronoh">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_morgue_compartment_morgue_storage_unit" tableName="morgue_compartment"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="morgue_compartment" indexName="idx_morgue_compartment_morgue_storage_unit">
+            <column name="storage_unit_id"/>
+        </createIndex>
+    </changeSet>
+
+     <!-- Create morgue storage assignment table -->
+    <changeSet id="morgue-new-table-morgue_storage_assignment-2026-09-16-12-03-11" author="walteronoh">
+		<preConditions onFail="MARK_RAN">
+			<not><tableExists tableName="morgue_storage_assignment"/></not>
+		</preConditions>
+		<comment>
+			Creating the morgue_storage_assignment table
+		</comment>
+        <createTable tableName="morgue_storage_assignment">
+            <column name="storage_assignment_id" autoIncrement="true" type="int">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="compartment_id" type="int">
+                <constraints nullable="false" foreignKeyName="fk_morgue_storage_assignment_morgue_compartment" references="morgue_compartment(compartment_id)" />
+            </column>
+            <column name="patient_id" type="int">
+                <constraints nullable="false" foreignKeyName="fk_morgue_storage_assignment_patient" references="patient(patient_id)" />
+            </column>
+            <column name="date_admitted" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_discharged" type="datetime"></column>
+            <column name="status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="creator" type="int"/>
+            <column name="date_created" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="int"/>
+            <column name="date_changed" type="datetime"/>
+            <column defaultValueBoolean="false" name="voided" type="boolean">
+                <constraints nullable="true"/>
+            </column>
+            <column name="voided_by" type="int"/>
+            <column name="date_voided" type="datetime"/>
+            <column name="voided_reason" type="varchar(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="morgue-new-index-storage_assignment-compartment-2026-09-16-12-17-38" author="walteronoh">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_morgue_storage_assignment_morgue_compartment" tableName="morgue_storage_assignment"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="morgue_storage_assignment" indexName="idx_morgue_storage_assignment_morgue_compartment">
+            <column name="compartment_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="morgue-new-index-storage_assignment-patient-2026-09-16-12-20-18" author="walteronoh">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_morgue_storage_assignment_patient" tableName="morgue_storage_assignment"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="morgue_storage_assignment" indexName="idx_morgue_storage_assignment_patient">
+            <column name="patient_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="morgue-new-index-storage_assignment-status-2026-09-16-12-25-00" author="walteronoh">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_morgue_storage_assignment_status" tableName="morgue_storage_assignment"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="morgue_storage_assignment" indexName="idx_morgue_storage_assignment_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
  
 </databaseChangeLog>

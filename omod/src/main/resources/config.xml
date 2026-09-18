@@ -17,6 +17,15 @@
 	<!-- <updateURL>https://modules.openmrs.org/modules/download/@MODULE_ID@/update.rdf</updateURL> -->
 	<!-- /Base Module Properties -->
 
+	<!--
+		Only MorgueDeceased is a Hibernate entity. The morgue storage unit / compartment /
+		storage assignment tables are read and written with plain JDBC in
+		org.openmrs.module.morgue.api.dao.hibernate instead: every mapping listed here is merged
+		into the reference application's single shared SessionFactory, and Spring's AOP
+		auto-proxy creator forces that whole SessionFactory to be built while it is still
+		resolving the MessageSource bean, which pushed module install / server boot from ~90
+		seconds to 5-40+ minutes. Do not add these three classes back here.
+	-->
 	<mappingFiles>
 		MorgueDeceased.hbm.xml
 	</mappingFiles>

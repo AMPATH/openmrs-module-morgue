@@ -24,5 +24,45 @@
             <artifactId>fhir2-api</artifactId>
         </dependency>
 
+        <!--
+            The OpenMRS module parent still pins JUnit 4.11, which SpringJUnit4ClassRunner (and so
+            BaseModuleContextSensitiveTest) refuses to run on: it requires 4.12 or higher.
+        -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!--
+                        fhir2-api is a provided dependency that this module's code never touches, but
+                        it ships a moduleApplicationContext.xml and @Component classes that the
+                        platform's own org.openmrs component scan picks up, and some of the beans they
+                        need only exist in fhir2's omod. Leaving it on the test classpath therefore
+                        breaks the BaseModuleContextSensitiveTest application context.
+
+                        The powermock api jars register a Mockito MockMaker plugin, but the parent pins
+                        powermock-core 1.5 while openmrs-test pulls powermock-api-mockito2 2.0.9, so
+                        loading that plugin fails. Nothing in this module or in openmrs-api's test
+                        classes uses PowerMock, so drop the api jars and let Mockito use its own mock
+                        maker.
+                    -->
+                    <classpathDependencyExcludes>
+                        <classpathDependencyExclude>org.openmrs.module:fhir2-api</classpathDependencyExclude>
+                        <classpathDependencyExclude>org.powermock:powermock-api-mockito2</classpathDependencyExclude>
+                        <classpathDependencyExclude>org.powermock:powermock-api-mockito</classpathDependencyExclude>
+                    </classpathDependencyExcludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
