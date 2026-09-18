@@ -25,7 +25,22 @@ import org.openmrs.module.morgue.api.dao.MorgueCompartmentDao;
 import org.openmrs.module.morgue.api.dao.MorgueDao;
 import org.openmrs.module.morgue.api.dao.MorgueStorageAssignmentDao;
 import org.openmrs.module.morgue.api.dao.MorgueStorageUnitDao;
+import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Default {@link MorgueService} implementation.
+ * <p>
+ * The class level {@code @Transactional} is load bearing, not decoration. OpenMRS wires
+ * {@code transactionAttributeSource} to an {@code AnnotationTransactionAttributeSource}, so the
+ * {@code TransactionProxyFactoryBean} around this service only opens a transaction for methods that
+ * carry the annotation. The morgue storage DAOs write through {@code Session#doWork}/
+ * {@code doReturningWork} rather than through mapped entities, so there is no Hibernate flush for
+ * the session lifecycle to commit on their behalf: without a transaction the insert or update runs
+ * on the pooled connection and is then discarded when it is returned to the pool (c3p0 is
+ * configured with {@code autoCommitOnClose=false}), which shows up as a REST call that reports
+ * success while the row never lands.
+ */
+@Transactional
 public class MorgueServiceImpl extends BaseOpenmrsService implements MorgueService {
 	
 	MorgueDao dao;
