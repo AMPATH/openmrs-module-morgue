@@ -1,6 +1,7 @@
 package org.openmrs.module.morgue.web.resource;
 
 import org.openmrs.annotation.Authorized;
+import org.openmrs.Location;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.morgue.MorgueStorageUnit;
 import org.openmrs.module.morgue.api.MorgueService;
@@ -8,19 +9,21 @@ import org.openmrs.module.morgue.rest.controller.base.MorgueResourceController;
 import org.openmrs.module.webservices.rest.web.RequestContext;
 import org.openmrs.module.webservices.rest.web.RestConstants;
 import org.openmrs.module.webservices.rest.web.annotation.Resource;
+import org.openmrs.module.webservices.rest.web.representation.CustomRepresentation;
 import org.openmrs.module.webservices.rest.web.representation.FullRepresentation;
 import org.openmrs.module.webservices.rest.web.representation.Representation;
 import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingCrudResource;
 import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingResourceDescription;
 import org.openmrs.module.webservices.rest.web.resource.impl.NeedsPaging;
 import org.openmrs.module.webservices.rest.web.resource.api.PageableResult;
+import org.openmrs.module.webservices.rest.web.response.ConversionException;
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 @CrossOrigin(origins = "*", methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE,
         RequestMethod.OPTIONS })
-@Resource(name = RestConstants.VERSION_1 + MorgueResourceController.MORGUE_NAMESPACE + "/storageunit", supportedClass = MorgueStorageUnit.class, supportedOpenmrsVersions = {
+@Resource(name = RestConstants.VERSION_1 + MorgueResourceController.MORGUE_NAMESPACE + "/storage-unit", supportedClass = MorgueStorageUnit.class, supportedOpenmrsVersions = {
         "2.0.*", "2.1.*", "2.2.*", "2.0 - 2.*" })
 @Authorized
 public class MorgueStorageUnitResource extends DelegatingCrudResource<MorgueStorageUnit> {
@@ -53,14 +56,33 @@ public class MorgueStorageUnitResource extends DelegatingCrudResource<MorgueStor
 	}
 	
 	@Override
-    protected PageableResult doGetAll(RequestContext context) throws ResponseException {
-        return new NeedsPaging<>(
-                Context.getService(MorgueService.class).getAllStorageUnits(false, null),
-                context);
-    }
+	protected PageableResult doGetAll(RequestContext context) throws ResponseException {
+		return new NeedsPaging<>(
+				Context.getService(MorgueService.class).getAllStorageUnits(null, null),
+				context);
+	}
+	
+	@Override
+	protected PageableResult doSearch(RequestContext context) throws ResponseException {
+		String locationUuid = context.getRequest().getParameter("location");
+		String includeVoidedParameter = context.getRequest().getParameter("includeVoided");
+		Boolean includeVoided = includeVoidedParameter == null ? null : Boolean.valueOf(includeVoidedParameter);
+		Location location = locationUuid == null ? null
+				: Context.getLocationService().getLocationByUuid(locationUuid);
+		if (locationUuid != null && location == null) {
+			throw new ConversionException("No location found for UUID: " + locationUuid, null);
+		}
+
+		return new NeedsPaging<>(
+				Context.getService(MorgueService.class).getAllStorageUnits(includeVoided, location),
+				context);
+	}
 	
 	@Override
 	public DelegatingResourceDescription getRepresentationDescription(Representation rep) {
+		if (rep instanceof CustomRepresentation) {
+			return null;
+		}
 		DelegatingResourceDescription description = new DelegatingResourceDescription();
 		description.addProperty("uuid");
 		description.addProperty("display");
@@ -74,9 +96,17 @@ public class MorgueStorageUnitResource extends DelegatingCrudResource<MorgueStor
 	}
 	
 	@Override
+	public DelegatingResourceDescription getCreatableProperties() {
+		DelegatingResourceDescription description = new DelegatingResourceDescription();
+		description.addProperty("name");
+		description.addProperty("location", Representation.REF);
+		return description;
+	}
+	
+	@Override
 	public String getUri(Object instance) {
 		MorgueStorageUnit unit = (MorgueStorageUnit) instance;
-		return RestConstants.URI_PREFIX + MorgueResourceController.MORGUE_NAMESPACE + "/storageunit/" + unit.getUuid();
+		return RestConstants.URI_PREFIX + MorgueResourceController.MORGUE_NAMESPACE + "/storage-unit/" + unit.getUuid();
 	}
 	
 	@Override

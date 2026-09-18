@@ -8,6 +8,7 @@ import org.openmrs.module.morgue.rest.controller.base.MorgueResourceController;
 import org.openmrs.module.webservices.rest.web.RequestContext;
 import org.openmrs.module.webservices.rest.web.RestConstants;
 import org.openmrs.module.webservices.rest.web.annotation.Resource;
+import org.openmrs.module.webservices.rest.web.representation.CustomRepresentation;
 import org.openmrs.module.webservices.rest.web.representation.FullRepresentation;
 import org.openmrs.module.webservices.rest.web.representation.Representation;
 import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingCrudResource;
@@ -66,16 +67,33 @@ public class MorgueCompartmentResource extends DelegatingCrudResource<MorgueComp
     }
 	
 	@Override
+	protected PageableResult doGetAll(RequestContext context) throws ResponseException {
+		return doSearch(context);
+	}
+	
+	@Override
 	public DelegatingResourceDescription getRepresentationDescription(Representation rep) {
+		if (rep instanceof CustomRepresentation) {
+			return null;
+		}
 		DelegatingResourceDescription description = new DelegatingResourceDescription();
 		description.addProperty("uuid");
 		description.addProperty("display");
+		description.addProperty("status");
 		description.addProperty("storageUnit", Representation.REF);
 		
 		if (rep instanceof FullRepresentation) {
 			description.addProperty("auditInfo");
 		}
 		
+		return description;
+	}
+	
+	@Override
+	public DelegatingResourceDescription getCreatableProperties() {
+		DelegatingResourceDescription description = new DelegatingResourceDescription();
+		description.addProperty("name");
+		description.addProperty("storageUnit", Representation.REF);
 		return description;
 	}
 	

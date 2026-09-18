@@ -56,9 +56,9 @@ public class HibernateMorgueStorageUnitDao implements MorgueStorageUnitDao {
 		if (uuid == null) {
 			return null;
 		}
-		
+
 		final String sql = "select " + selectList() + " from " + TABLE + " " + ALIAS + " where " + ALIAS + ".uuid = ?";
-		
+
 		Session session = sessionFactory.getCurrentSession();
 		List<Row> rows = session.doReturningWork(connection -> {
 			try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -66,7 +66,7 @@ public class HibernateMorgueStorageUnitDao implements MorgueStorageUnitDao {
 				return readRows(ps);
 			}
 		});
-		
+
 		return rows.isEmpty() ? null : resolve(session, rows.get(0));
 	}
 	
@@ -76,9 +76,9 @@ public class HibernateMorgueStorageUnitDao implements MorgueStorageUnitDao {
 	@Override
 	public List<MorgueStorageUnit> getAllStorageUnits(Boolean includeVoided, Location location) {
 		StringBuilder sql = new StringBuilder("select ").append(selectList()).append(" from ").append(TABLE).append(' ')
-		        .append(ALIAS);
+				.append(ALIAS);
 		List<String> clauses = new ArrayList<>();
-		
+
 		if (includeVoided == null || !includeVoided) {
 			clauses.add(ALIAS + ".voided = false");
 		}
@@ -89,10 +89,10 @@ public class HibernateMorgueStorageUnitDao implements MorgueStorageUnitDao {
 			sql.append(" where ").append(String.join(" and ", clauses));
 		}
 		sql.append(" order by ").append(ALIAS).append(".storage_unit_id");
-		
+
 		final String statement = sql.toString();
 		final Integer locationId = location == null ? null : location.getLocationId();
-		
+
 		Session session = sessionFactory.getCurrentSession();
 		List<Row> rows = session.doReturningWork(connection -> {
 			try (PreparedStatement ps = connection.prepareStatement(statement)) {
@@ -102,7 +102,7 @@ public class HibernateMorgueStorageUnitDao implements MorgueStorageUnitDao {
 				return readRows(ps);
 			}
 		});
-		
+
 		List<MorgueStorageUnit> storageUnits = new ArrayList<>(rows.size());
 		for (Row row : rows) {
 			storageUnits.add(resolve(session, row));
@@ -138,10 +138,10 @@ public class HibernateMorgueStorageUnitDao implements MorgueStorageUnitDao {
 		if (storageUnit == null || storageUnit.getStorageUnitId() == null) {
 			throw new DAOException("Cannot delete a morgue storage unit that has not been saved");
 		}
-		
+
 		final String sql = "delete from " + TABLE + " where storage_unit_id = ?";
 		final Integer id = storageUnit.getStorageUnitId();
-		
+
 		sessionFactory.getCurrentSession().doWork(connection -> {
 			try (PreparedStatement ps = connection.prepareStatement(sql)) {
 				ps.setInt(1, id);
@@ -152,11 +152,11 @@ public class HibernateMorgueStorageUnitDao implements MorgueStorageUnitDao {
 	
 	private void insert(MorgueStorageUnit storageUnit) {
 		MorgueJdbcSupport.stampForInsert(storageUnit);
-		
+
 		final String sql = "insert into " + TABLE + " (uuid, display, location_id, creator, date_created, changed_by, "
-		        + "date_changed, voided, voided_by, date_voided, voided_reason) "
-		        + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-		
+				+ "date_changed, voided, voided_by, date_voided, voided_reason) "
+				+ "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
 		Integer generatedId = sessionFactory.getCurrentSession().doReturningWork(connection -> {
 			try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 				int i = 1;
@@ -168,17 +168,17 @@ public class HibernateMorgueStorageUnitDao implements MorgueStorageUnitDao {
 				return MorgueJdbcSupport.readGeneratedId(ps);
 			}
 		});
-		
+
 		storageUnit.setStorageUnitId(generatedId);
 	}
 	
 	private void update(MorgueStorageUnit storageUnit) {
 		MorgueJdbcSupport.stampForUpdate(storageUnit);
-		
+
 		final String sql = "update " + TABLE + " set uuid = ?, display = ?, location_id = ?, creator = ?, "
-		        + "date_created = ?, changed_by = ?, date_changed = ?, voided = ?, voided_by = ?, date_voided = ?, "
-		        + "voided_reason = ? where storage_unit_id = ?";
-		
+				+ "date_created = ?, changed_by = ?, date_changed = ?, voided = ?, voided_by = ?, date_voided = ?, "
+				+ "voided_reason = ? where storage_unit_id = ?";
+
 		sessionFactory.getCurrentSession().doWork(connection -> {
 			try (PreparedStatement ps = connection.prepareStatement(sql)) {
 				int i = 1;

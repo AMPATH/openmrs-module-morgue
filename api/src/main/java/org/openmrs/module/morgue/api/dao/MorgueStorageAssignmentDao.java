@@ -57,6 +57,9 @@ public interface MorgueStorageAssignmentDao {
 	List<MorgueStorageAssignment> getAssignmentsForLocation(Location location, Boolean includeVoided, Date createdOnOrAfter,
 	        Date admittedOnOrAfter, Date admittedOnOrBefore);
 	
+	List<MorgueStorageAssignment> getAssignmentsForLocation(Location location, Boolean includeVoided, String status,
+	        Date createdOnOrAfter, Date admittedOnOrAfter, Date admittedOnOrBefore);
+	
 	/**
 	 * Lists the non voided assignments of a compartment, ordered by id. Used to decide whether a
 	 * compartment is already occupied.

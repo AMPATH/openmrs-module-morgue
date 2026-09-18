@@ -1,5 +1,8 @@
 package org.openmrs.module.morgue.web.resource;
 
+import java.util.Date;
+
+import org.openmrs.Location;
 import org.openmrs.Patient;
 import org.openmrs.annotation.Authorized;
 import org.openmrs.api.context.Context;
@@ -9,7 +12,9 @@ import org.openmrs.module.morgue.api.MorgueService;
 import org.openmrs.module.morgue.rest.controller.base.MorgueResourceController;
 import org.openmrs.module.webservices.rest.web.RequestContext;
 import org.openmrs.module.webservices.rest.web.RestConstants;
+import org.openmrs.module.webservices.rest.web.ConversionUtil;
 import org.openmrs.module.webservices.rest.web.annotation.Resource;
+import org.openmrs.module.webservices.rest.web.representation.CustomRepresentation;
 import org.openmrs.module.webservices.rest.web.representation.FullRepresentation;
 import org.openmrs.module.webservices.rest.web.representation.Representation;
 import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingCrudResource;
@@ -22,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 @CrossOrigin(origins = "*", methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE,
         RequestMethod.OPTIONS })
-@Resource(name = RestConstants.VERSION_1 + MorgueResourceController.MORGUE_NAMESPACE + "/storageassignment", supportedClass = MorgueStorageAssignment.class, supportedOpenmrsVersions = {
+@Resource(name = RestConstants.VERSION_1 + MorgueResourceController.MORGUE_NAMESPACE + "/storage-assignment", supportedClass = MorgueStorageAssignment.class, supportedOpenmrsVersions = {
         "2.0.*", "2.1.*", "2.2.*", "2.0 - 2.*" })
 @Authorized
 public class MorgueStorageAssignmentResource extends DelegatingCrudResource<MorgueStorageAssignment> {
@@ -49,10 +54,13 @@ public class MorgueStorageAssignmentResource extends DelegatingCrudResource<Morg
 	
 	@Override
 	public MorgueStorageAssignment getByUniqueId(String uuid) {
-		// No direct getByUuid on the service yet - falls back to searching patient assignments
-		// Consider adding MorgueService.getAssignmentByUuid(uuid) if this is used often.
-		throw new UnsupportedOperationException(
-		        "getByUniqueId not yet implemented - add getAssignmentByUuid to MorgueService/DAO");
+		MorgueCompartment compartment = Context.getService(MorgueService.class).getCompartmentByUuid(uuid);
+		if (compartment == null) {
+			return null;
+		}
+		return Context.getService(MorgueService.class).getAssignmentsForCompartment(compartment).stream()
+		        .filter(assignment -> !assignment.getVoided() && assignment.getDateDischarged() == null)
+		        .findFirst().orElse(null);
 	}
 	
 	@Override
@@ -76,11 +84,37 @@ public class MorgueStorageAssignmentResource extends DelegatingCrudResource<Morg
                     Context.getService(MorgueService.class).getAssignmentsForPatient(patient),
                     context);
         }
+
+		String locationUuid = context.getRequest().getParameter("location");
+		if (locationUuid != null) {
+			Location location = Context.getLocationService().getLocationByUuid(locationUuid);
+			if (location == null) {
+				return new org.openmrs.module.webservices.rest.web.resource.impl.EmptySearchResult();
+			}
+			String status = context.getRequest().getParameter("status");
+			String createdOnOrAfter = context.getRequest().getParameter("createdOnOrAfter");
+			String admittedOnOrAfter = context.getRequest().getParameter("admittedOnOrAfter");
+			String admittedOnOrBefore = context.getRequest().getParameter("admittedOnOrBefore");
+			return new NeedsPaging<>(Context.getService(MorgueService.class).getAssignmentsForLocation(location, false, status,
+			        convertDate(createdOnOrAfter), convertDate(admittedOnOrAfter), convertDate(admittedOnOrBefore)), context);
+		}
         return new org.openmrs.module.webservices.rest.web.resource.impl.EmptySearchResult();
     }
 	
 	@Override
+	protected PageableResult doGetAll(RequestContext context) throws ResponseException {
+		return doSearch(context);
+	}
+	
+	private Date convertDate(String value) {
+		return value == null || value.trim().isEmpty() ? null : (Date) ConversionUtil.convert(value, Date.class);
+	}
+	
+	@Override
 	public DelegatingResourceDescription getRepresentationDescription(Representation rep) {
+		if (rep instanceof CustomRepresentation) {
+			return null;
+		}
 		DelegatingResourceDescription description = new DelegatingResourceDescription();
 		description.addProperty("uuid");
 		description.addProperty("patient", Representation.REF);
@@ -97,10 +131,20 @@ public class MorgueStorageAssignmentResource extends DelegatingCrudResource<Morg
 	}
 	
 	@Override
+	public DelegatingResourceDescription getCreatableProperties() {
+		DelegatingResourceDescription description = new DelegatingResourceDescription();
+		description.addProperty("patient", Representation.REF);
+		description.addProperty("compartment", Representation.REF);
+		return description;
+	}
+	
+	@Override
 	public String getUri(Object instance) {
 		MorgueStorageAssignment assignment = (MorgueStorageAssignment) instance;
-		return RestConstants.URI_PREFIX + MorgueResourceController.MORGUE_NAMESPACE + "/storageassignment/"
-		        + assignment.getUuid();
+		String compartmentUuid = assignment.getCompartment() == null ? assignment.getUuid() : assignment.getCompartment()
+		        .getUuid();
+		return RestConstants.URI_PREFIX + MorgueResourceController.MORGUE_NAMESPACE + "/storage-assignment/"
+		        + compartmentUuid;
 	}
 	
 	@Override

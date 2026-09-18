@@ -142,6 +142,11 @@ public class MorgueServiceImpl extends BaseOpenmrsService implements MorgueServi
 	}
 	
 	@Override
+	public List<MorgueStorageAssignment> getAssignmentsForCompartment(MorgueCompartment compartment) {
+		return storageAssignmentDao.getAssignmentsForCompartment(compartment);
+	}
+	
+	@Override
 	public List<MorgueStorageAssignment> getAssignmentsForLocation(Location location, Boolean includeVoided,
 	        Date createdOnOrAfter, Date admittedOnOrAfter, Date admittedOnOrBefore) {
 		return storageAssignmentDao.getAssignmentsForLocation(location, includeVoided, createdOnOrAfter, admittedOnOrAfter,
@@ -149,10 +154,23 @@ public class MorgueServiceImpl extends BaseOpenmrsService implements MorgueServi
 	}
 	
 	@Override
+	public List<MorgueStorageAssignment> getAssignmentsForLocation(Location location, Boolean includeVoided, String status,
+	        Date createdOnOrAfter, Date admittedOnOrAfter, Date admittedOnOrBefore) {
+		return storageAssignmentDao.getAssignmentsForLocation(location, includeVoided, status, createdOnOrAfter,
+		    admittedOnOrAfter, admittedOnOrBefore);
+	}
+	
+	@Override
 	public MorgueStorageAssignment assignPatientToCompartment(Patient patient, MorgueCompartment compartment) {
 
 		if (patient == null || compartment == null) {
 			throw new APIException("Patient and compartment are required");
+		}
+		if (compartment.getCompartmentId() == null) {
+			compartment = compartmentDao.getCompartmentByUuid(compartment.getUuid());
+			if (compartment == null) {
+				throw new APIException("Compartment not found");
+			}
 		}
 
 		// Business rule: a patient can't have two active assignments at once

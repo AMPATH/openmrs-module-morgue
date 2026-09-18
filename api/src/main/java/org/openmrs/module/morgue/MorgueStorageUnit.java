@@ -61,6 +61,14 @@ public class MorgueStorageUnit extends BaseOpenmrsData {
 		this.display = display;
 	}
 	
+	public String getName() {
+		return display;
+	}
+	
+	public void setName(String name) {
+		this.display = name;
+	}
+	
 	public Location getLocation() {
 		return location;
 	}

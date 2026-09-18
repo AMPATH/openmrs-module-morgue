@@ -28,6 +28,8 @@ public class MorgueCompartment extends BaseOpenmrsData {
 	
 	private String display;
 	
+	private String status;
+	
 	private MorgueStorageUnit storageUnit;
 	
 	public MorgueCompartment() {
@@ -57,6 +59,22 @@ public class MorgueCompartment extends BaseOpenmrsData {
 	
 	public void setDisplay(String display) {
 		this.display = display;
+	}
+	
+	public String getName() {
+		return display;
+	}
+	
+	public void setName(String name) {
+		this.display = name;
+	}
+	
+	public String getStatus() {
+		return status;
+	}
+	
+	public void setStatus(String status) {
+		this.status = status;
 	}
 	
 	public MorgueStorageUnit getStorageUnit() {

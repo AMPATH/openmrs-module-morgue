@@ -55,8 +55,13 @@ public interface MorgueService extends OpenmrsService {
 	
 	List<MorgueStorageAssignment> getAssignmentsForPatient(Patient patient);
 	
+	List<MorgueStorageAssignment> getAssignmentsForCompartment(MorgueCompartment compartment);
+	
 	List<MorgueStorageAssignment> getAssignmentsForLocation(Location location, Boolean includeVoided, Date createdOnOrAfter,
 	        Date admittedOnOrAfter, Date admittedOnOrBefore);
+	
+	List<MorgueStorageAssignment> getAssignmentsForLocation(Location location, Boolean includeVoided, String status,
+	        Date createdOnOrAfter, Date admittedOnOrAfter, Date admittedOnOrBefore);
 	
 	MorgueStorageAssignment assignPatientToCompartment(Patient patient, MorgueCompartment compartment);
 	

@@ -121,6 +121,13 @@ public class HibernateMorgueStorageAssignmentDao implements MorgueStorageAssignm
 	@Override
 	public List<MorgueStorageAssignment> getAssignmentsForLocation(Location location, Boolean includeVoided,
 	        Date createdOnOrAfter, Date admittedOnOrAfter, Date admittedOnOrBefore) {
+		return getAssignmentsForLocation(location, includeVoided, null, createdOnOrAfter, admittedOnOrAfter,
+		    admittedOnOrBefore);
+	}
+	
+	@Override
+	public List<MorgueStorageAssignment> getAssignmentsForLocation(Location location, Boolean includeVoided, String status,
+	        Date createdOnOrAfter, Date admittedOnOrAfter, Date admittedOnOrBefore) {
 		StringBuilder sql = new StringBuilder(baseSelect());
 		List<String> clauses = new ArrayList<>();
 		List<Object> parameters = new ArrayList<>();
@@ -131,6 +138,10 @@ public class HibernateMorgueStorageAssignmentDao implements MorgueStorageAssignm
 		}
 		if (includeVoided == null || !includeVoided) {
 			clauses.add(ALIAS + ".voided = false");
+		}
+		if (status != null && !status.trim().isEmpty()) {
+			clauses.add(ALIAS + ".status = ?");
+			parameters.add(status);
 		}
 		if (createdOnOrAfter != null) {
 			clauses.add(ALIAS + ".date_created >= ?");
@@ -294,10 +305,12 @@ public class HibernateMorgueStorageAssignmentDao implements MorgueStorageAssignm
 	
 	private static String baseSelect() {
 		return "select " + MorgueJdbcSupport.selectList(ALIAS, PREFIX, OWN_COLUMNS, MorgueJdbcSupport.AUDIT_COLUMNS) + ", "
-		        + HibernateMorgueCompartmentDao.selectList() + ", " + HibernateMorgueStorageUnitDao.selectList() + " from "
-		        + TABLE + " " + ALIAS + " inner join " + HibernateMorgueCompartmentDao.TABLE + " "
-		        + HibernateMorgueCompartmentDao.ALIAS + " on " + HibernateMorgueCompartmentDao.ALIAS + ".compartment_id = "
-		        + ALIAS + ".compartment_id " + HibernateMorgueCompartmentDao.storageUnitJoin();
+		        + HibernateMorgueCompartmentDao.selectList() + ", case when " + ALIAS + ".date_discharged is null and "
+		        + ALIAS + ".voided = false then 'OCCUPIED' else 'VACANT' end as c_status, "
+		        + HibernateMorgueStorageUnitDao.selectList() + " from " + TABLE + " " + ALIAS + " inner join "
+		        + HibernateMorgueCompartmentDao.TABLE + " " + HibernateMorgueCompartmentDao.ALIAS + " on "
+		        + HibernateMorgueCompartmentDao.ALIAS + ".compartment_id = " + ALIAS + ".compartment_id "
+		        + HibernateMorgueCompartmentDao.storageUnitJoin();
 	}
 	
 	private static List<Row> readRows(PreparedStatement ps) throws SQLException {

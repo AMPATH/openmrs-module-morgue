@@ -41,6 +41,8 @@ public class HibernateMorgueCompartmentDao implements MorgueCompartmentDao {
 	
 	static final String ALIAS = "c";
 	
+	static final String ASSIGNMENT_ALIAS = "sa";
+	
 	static final String PREFIX = "c_";
 	
 	private static final String[] OWN_COLUMNS = { "compartment_id", "uuid", "display", "storage_unit_id" };
@@ -203,8 +205,16 @@ public class HibernateMorgueCompartmentDao implements MorgueCompartmentDao {
 	 * @return a select statement up to and including the joins
 	 */
 	private static String baseSelect() {
-		return "select " + selectList() + ", " + HibernateMorgueStorageUnitDao.selectList() + " from " + TABLE + " " + ALIAS
+		return "select " + selectList() + ", case when " + ASSIGNMENT_ALIAS
+		        + ".compartment_id is null then 'VACANT' else 'OCCUPIED' end as c_status, "
+		        + HibernateMorgueStorageUnitDao.selectList() + " from " + TABLE + " " + ALIAS + " " + activeAssignmentJoin()
 		        + " " + storageUnitJoin();
+	}
+	
+	static String activeAssignmentJoin() {
+		return "left join " + HibernateMorgueStorageAssignmentDao.TABLE + " " + ASSIGNMENT_ALIAS + " on " + ASSIGNMENT_ALIAS
+		        + ".compartment_id = " + ALIAS + ".compartment_id and " + ASSIGNMENT_ALIAS + ".date_discharged is null and "
+		        + ASSIGNMENT_ALIAS + ".voided = false";
 	}
 	
 	/**
@@ -239,6 +249,7 @@ public class HibernateMorgueCompartmentDao implements MorgueCompartmentDao {
 		row.compartment.setCompartmentId(MorgueJdbcSupport.getInteger(rs, PREFIX + "compartment_id"));
 		row.compartment.setUuid(rs.getString(PREFIX + "uuid"));
 		row.compartment.setDisplay(rs.getString(PREFIX + "display"));
+		row.compartment.setStatus(rs.getString("c_status"));
 		row.audit = MorgueJdbcSupport.readAudit(rs, PREFIX);
 		row.storageUnitRow = HibernateMorgueStorageUnitDao.readRow(rs);
 		return row;
