@@ -121,7 +121,9 @@ public class MorguePatientResource extends DelegatingCrudResource<CombinedPatien
 			Boolean preferred = (Boolean) ob[7];
 			// System.out.println("Result Got: " + patient.getId() + " : " + person.getId() + " : " + personName.getId() + " : " + personNameId + " : "
 			//         + givenName + " : " + middleName + " : " + familyName + " : " + preferred);
-			CombinedPatientDetails combinedPatientDetails = new CombinedPatientDetails(patient, person, personName);
+			Date encounterDatetime = (Date) ob[8];
+			CombinedPatientDetails combinedPatientDetails = new CombinedPatientDetails(patient, person, personName,
+			    encounterDatetime);
 			combinedDetailsList.add(combinedPatientDetails);
 		}
 		
@@ -138,6 +140,7 @@ public class MorguePatientResource extends DelegatingCrudResource<CombinedPatien
 		description.addProperty("patient", Representation.DEFAULT);
 		description.addProperty("person", Representation.DEFAULT);
 		description.addProperty("personName", Representation.DEFAULT);
+		description.addProperty("encounterDatetime");
 		return description;
 	}
 	

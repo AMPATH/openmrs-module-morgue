@@ -108,7 +108,14 @@ public class MorgueDao {
 				"CAST(pn.date_created AS CHAR) AS pn_date_created, pn.voided AS pn_voided, pn.voided_by AS pn_voided_by, ");
 		sql.append(
 				"CAST(pn.date_voided AS CHAR) AS pn_date_voided, pn.void_reason AS pn_void_reason, pn.uuid AS pn_uuid, ");
-		sql.append("pn.changed_by AS pn_changed_by, CAST(pn.date_changed AS CHAR) AS pn_date_changed ");
+		sql.append("pn.changed_by AS pn_changed_by, CAST(pn.date_changed AS CHAR) AS pn_date_changed, ");
+		sql.append("CAST((SELECT MAX(e.encounter_datetime) FROM encounter e ");
+		sql.append("LEFT JOIN location l ON l.location_id = e.location_id ");
+		sql.append("WHERE e.patient_id = p.patient_id AND e.encounter_type = 347 ");
+		if (locationUuid != null && !locationUuid.isEmpty()) {
+			sql.append("AND l.uuid = :locationUuid ");
+		}
+		sql.append(") AS CHAR) AS encounter_datetime ");
 		sql.append("FROM patient p ");
 		sql.append("JOIN person pr ON p.patient_id = pr.person_id ");
 		sql.append("LEFT JOIN person_name pn ON pr.person_id = pn.person_id ");
@@ -173,7 +180,7 @@ public class MorgueDao {
 			query.setParameter("createdBefore", createdOnOrBeforeDate);
 		}
 
-		if (locationUuid != null) {
+		if (locationUuid != null && !locationUuid.isEmpty()) {
 			query.setParameter("locationUuid", locationUuid);
 		}
 
@@ -257,7 +264,7 @@ public class MorgueDao {
 				patient.setNames(names);
 
 				// Construct result array matching MorguePatientResource expectation
-				Object[] mappedRow = new Object[8];
+				Object[] mappedRow = new Object[9];
 				mappedRow[0] = patient;
 				mappedRow[1] = person;
 				mappedRow[2] = personName;
@@ -266,6 +273,7 @@ public class MorgueDao {
 				mappedRow[5] = personName.getMiddleName();
 				mappedRow[6] = personName.getFamilyName();
 				mappedRow[7] = personName.getPreferred();
+				mappedRow[8] = parseDateSafe(row[49], dateFormat);
 
 				mappedResults.add(mappedRow);
 
