@@ -117,11 +117,8 @@ public class MorgueStorageAssignmentResource extends DelegatingCrudResource<Morg
 		}
 		DelegatingResourceDescription description = new DelegatingResourceDescription();
 		description.addProperty("uuid");
-		description
-		        .addProperty(
-		            "patient",
-		            new CustomRepresentation(
-		                    "(uuid,display,identifiers:(uuid,identifier,preferred,identifierType:(uuid,display)),person:(dead,deathDate,deathdateEstimated))"));
+		description.addProperty("patient", new CustomRepresentation(
+		        "(uuid,display,identifiers:(uuid,identifier,preferred,identifierType:(uuid,display)),person)"));
 		description.addProperty("compartment", Representation.REF);
 		description.addProperty("dateAdmitted");
 		description.addProperty("dateDischarged");
