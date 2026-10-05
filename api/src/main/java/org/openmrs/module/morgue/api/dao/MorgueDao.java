@@ -11,6 +11,8 @@ package org.openmrs.module.morgue.api.dao;
 
 import org.hibernate.criterion.Restrictions;
 import org.openmrs.Patient;
+import org.openmrs.PatientIdentifier;
+import org.openmrs.PatientIdentifierType;
 import org.openmrs.api.db.hibernate.DbSession;
 import org.openmrs.api.db.hibernate.DbSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -273,7 +275,53 @@ public class MorgueDao {
 			}
 		}
 
+		attachIdentifiers(mappedResults);
+
 		return mappedResults;
+	}
+	
+	// Loads non-voided identifiers for the mapped patients in batches.
+	private void attachIdentifiers(List<Object[]> mappedResults) {
+		Map<Integer, Patient> patientsById = new HashMap<>();
+		for (Object[] row : mappedResults) {
+			Patient patient = (Patient) row[0];
+			patientsById.put(patient.getPatientId(), patient);
+		}
+		if (patientsById.isEmpty()) {
+			return;
+		}
+		
+		Session session = this.sessionFactory.getCurrentSession();
+		List<Integer> ids = new ArrayList<>(patientsById.keySet());
+		int batchSize = 500;
+		for (int i = 0; i < ids.size(); i += batchSize) {
+			List<Integer> batch = ids.subList(i, Math.min(i + batchSize, ids.size()));
+			org.hibernate.query.NativeQuery idQuery = session.createNativeQuery(
+			    "SELECT pi.patient_id, pi.patient_identifier_id, pi.identifier, pi.preferred, pi.uuid AS identifier_uuid, "
+			            + "pit.patient_identifier_type_id, pit.name AS type_name, pit.uuid AS type_uuid "
+			            + "FROM patient_identifier pi "
+			            + "JOIN patient_identifier_type pit ON pit.patient_identifier_type_id = pi.identifier_type "
+			            + "WHERE pi.voided = 0 AND pi.patient_id IN (:ids) ORDER BY pi.preferred DESC, pi.patient_identifier_id");
+			idQuery.setParameterList("ids", batch);
+			for (Object[] r : (List<Object[]>) idQuery.list()) {
+				Patient patient = patientsById.get(((Number) r[0]).intValue());
+				if (patient == null) {
+					continue;
+				}
+				PatientIdentifierType type = new PatientIdentifierType(((Number) r[5]).intValue());
+				type.setName((String) r[6]);
+				type.setUuid((String) r[7]);
+				
+				PatientIdentifier identifier = new PatientIdentifier();
+				identifier.setPatientIdentifierId(((Number) r[1]).intValue());
+				identifier.setIdentifier((String) r[2]);
+				identifier.setPreferred(getBoolean(r[3]));
+				identifier.setUuid((String) r[4]);
+				identifier.setIdentifierType(type);
+				identifier.setPatient(patient);
+				patient.addIdentifier(identifier);
+			}
+		}
 	}
 	
 	private Date parseDateSafe(Object dateObj, java.text.SimpleDateFormat format) {
