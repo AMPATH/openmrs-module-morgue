@@ -111,7 +111,7 @@ public class MorgueDao {
 		sql.append("pn.changed_by AS pn_changed_by, CAST(pn.date_changed AS CHAR) AS pn_date_changed, ");
 		sql.append("CAST((SELECT MAX(e.encounter_datetime) FROM encounter e ");
 		sql.append("LEFT JOIN location l ON l.location_id = e.location_id ");
-		sql.append("WHERE e.patient_id = p.patient_id AND e.encounter_type = 347 ");
+		sql.append("WHERE e.patient_id = p.patient_id AND e.encounter_type = 347 AND e.voided = 0");
 		if (locationUuid != null && !locationUuid.isEmpty()) {
 			sql.append("AND l.uuid = :locationUuid ");
 		}
@@ -151,7 +151,7 @@ public class MorgueDao {
         	sql.append("LEFT JOIN location l ON l.location_id = e.location_id ");
         	sql.append("LEFT JOIN obs o ON o.encounter_id = e.encounter_id ");
         	// sql.append("WHERE e.patient_id = p.patient_id AND et.encounter_type_id IN (319, 167) AND o.concept_id = 7087 AND o.value_coded = 159 "); 
-        	sql.append("WHERE e.patient_id = p.patient_id AND et.encounter_type_id IN (347)"); 
+        	sql.append("WHERE e.patient_id = p.patient_id AND et.encounter_type_id IN (347) AND e.voided = 0"); 
 			sql.append("AND l.uuid = :locationUuid) ");
 		}
 
